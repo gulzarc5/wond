@@ -38,7 +38,7 @@ class StudentController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use($request,$fee_total_amount,$discount,$admission_type,$receive_amount,&$student) {
+            DB::transaction(function () use($request) {
               $student = DB::table('students')
                 ->insertGetId([
                     'class_id' => $request->input('class'),
@@ -51,8 +51,7 @@ class StudentController extends Controller
                 ]);
 
                 if ($student) {
-                    $batch = DB::table('student_batch')->where('id',$request->input('batch'))->first();
-                    $student_id = "WNS".$batch->name;
+                    $student_id = "WNS".$request->input('batch');
                     $length = 5 - intval(strlen((string) $student));
                     for ($i=0; $i < $length; $i++) { 
                         $student_id.='0';
@@ -103,8 +102,7 @@ class StudentController extends Controller
                 }
      
             });
-            $batch = $request->input('batch');
-            return redirect()->route('admin.student_thank_you',['student_id'=>encrypt($student),'batch_id'=>encrypt($batch)]);      
+            return redirect()->back()->with('message','Student Added Successfully'); 
         }catch (\Exception $e) {
             dd($e);
             return redirect()->back()->with('error','Something Went Wrong Please Try Again');
