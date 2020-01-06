@@ -8,6 +8,7 @@ use DB;
 use Carbon\Carbon;
 use Illuminate\Contracts\Encryption\DecryptException;
 use DataTables;
+use SmsHelpers;
 
 class StudentController extends Controller
 {
@@ -96,7 +97,10 @@ class StudentController extends Controller
                             'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                             'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                         ]);
-                    
+                    $arr1 = explode(' ',trim($request->input('name')));
+                    $name =  $arr1[0];
+                    $request_info = urldecode("Welcome To Wonderland National School. Mr.".strtoupper($name)."  Is Registered Successfully into WNS. Thank You");
+                    SmsHelpers::smsSend($request->input('mobile'),$request_info);
                 }else {
                     return redirect()->back()->with('error','Something Went Wrong Please Try Again');
                 }
@@ -282,6 +286,11 @@ class StudentController extends Controller
                             'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                             'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                         ]);
+                    $arr1 = explode(' ',trim($request->input('name')));
+                    $name =  $arr1[0];
+                    $class_name = DB::table('class')->where('id',$request->input('class'))->first();
+                    $request_info = urldecode("Welcome To Wonderland National School. Mr.".strtoupper($name)."  Is Registered Successfully in Class ".strtoupper($class_name->name).". Thank You");
+                    SmsHelpers::smsSend($request->input('mobile'),$request_info);
                     
                 }else {
                     return redirect()->back()->with('error','Something Went Wrong Please Try Again');
@@ -567,6 +576,16 @@ class StudentController extends Controller
                         'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                     ]);
             });
+            $student_name = DB::table('students')
+                ->select('student_details.name as s_name','student_details.mobile as mobile')
+                ->leftjoin('student_details','student_details.student_id','=','students.id')
+                ->where('students.id',$student_id)
+                ->first();
+            $arr1 = explode(' ',trim($student_name->s_name));
+            $name =  $arr1[0];
+            $class_name = DB::table('class')->where('id',$class)->first();
+            $request_info = urldecode("Congratulations !! . Mr.".strtoupper($name)." Successfully Promoted To Class ".strtoupper($class_name->name).". Thank You");
+            SmsHelpers::smsSend($student_name->mobile,$request_info);
             return redirect()->route('admin.student_promotion_thank_you',['student_id'=>encrypt($student_id),'batch_id'=>encrypt($batch)]); 
             
         }catch (\Exception $e) {

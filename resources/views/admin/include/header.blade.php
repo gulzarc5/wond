@@ -132,14 +132,6 @@
 
                   <li><a><i class="fa fa-bar-chart-o"></i> Configuration <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                        <li><a>Users<span class="fa fa-chevron-down"></span></a>
-                          <ul class="nav child_menu">
-                            <li class="sub_menu"><a href="#">New Registration</a>
-                            </li>
-                            <li><a href="#">Member List</a>
-                            </li>
-                          </ul>
-                        </li>
 
                       <li><a></i>Class <span class="fa fa-chevron-down"></span></a>
                         <ul class="nav child_menu">
