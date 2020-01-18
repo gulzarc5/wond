@@ -99,7 +99,11 @@ class StudentController extends Controller
                         ]);
                     $arr1 = explode(' ',trim($request->input('name')));
                     $name =  $arr1[0];
-                    $request_info = urldecode("Welcome To Wonderland National School. Mr.".strtoupper($name)."  Is Registered Successfully into WNS. Thank You");
+                    $sym = "Mr.";
+                    if ($request->input('gender') == 'F') {
+                         $sym = "Miss.";
+                    }
+                    $request_info = urldecode("Dear Parent, updates related to your ward and school will be sent to you via SMS.Wonderland National School,Latakandi.");
                     SmsHelpers::smsSend($request->input('mobile'),$request_info);
                 }else {
                     return redirect()->back()->with('error','Something Went Wrong Please Try Again');
@@ -289,7 +293,7 @@ class StudentController extends Controller
                     $arr1 = explode(' ',trim($request->input('name')));
                     $name =  $arr1[0];
                     $class_name = DB::table('class')->where('id',$request->input('class'))->first();
-                    $request_info = urldecode("Welcome To Wonderland National School. Mr.".strtoupper($name)."  Is Registered Successfully in Class ".strtoupper($class_name->name).". Thank You");
+                    $request_info = urldecode("Dear Parent, updates related to your ward and school will be sent to you via SMS.Wonderland National School,Latakandi.");
                     SmsHelpers::smsSend($request->input('mobile'),$request_info);
                     
                 }else {
@@ -584,7 +588,7 @@ class StudentController extends Controller
             $arr1 = explode(' ',trim($student_name->s_name));
             $name =  $arr1[0];
             $class_name = DB::table('class')->where('id',$class)->first();
-            $request_info = urldecode("Congratulations !! . Mr.".strtoupper($name)." Successfully Promoted To Class ".strtoupper($class_name->name).". Thank You");
+            $request_info = urldecode("Dear Parent, updates related to your ward and school will be sent to you via SMS.Wonderland National School,Latakandi.");
             SmsHelpers::smsSend($student_name->mobile,$request_info);
             return redirect()->route('admin.student_promotion_thank_you',['student_id'=>encrypt($student_id),'batch_id'=>encrypt($batch)]); 
             
