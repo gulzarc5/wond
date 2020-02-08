@@ -41,6 +41,7 @@
     <link href="{{asset('admin/src_files/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css')}}" rel="stylesheet">
 
     <link href="{{asset('admin/src_files/build/css/custom.min.css')}}" rel="stylesheet">
+    <link href="{{asset('admin/css/custom.css')}}" rel="stylesheet">
   </head>
 
   <body class="nav-md">
@@ -75,6 +76,8 @@
                 <ul class="nav side-menu">
                   <li><a href="{{ route('admin.deshboard')}}"><i class="fa fa-home"></i> Home </span></a>
                   </li>
+                  <li><a href="{{ route('admin.student_fee_receive_form')}}"><i class="fa fa-home"></i> Receive Fees </span></a>
+                  </li>
                   <li><a><i class="fa fa-edit"></i> Student <span class="fa fa-chevron-down"></span></a>
                      <ul class="nav child_menu">
                       <li class="sub_menu"><a href="{{route('admin.add_student_form')}}">New Admission</a></li>
@@ -90,7 +93,7 @@
                      <li class="sub_menu"><a href="{{route('admin.admsn_fee_report')}}">Admission Fees</a></li>
                      <li class="sub_menu"><a href="{{route('admin.promotion_fee_report')}}">Promotion Fees</a></li>
                      <li class="sub_menu"><a href="{{route('admin.monthly_fee_report')}}">Monthly Fees</a></li>
-                     <li class="sub_menu"><a href="{{route('admin.student_promote')}}">Summary Report</a></li>
+                     <li class="sub_menu"><a href="#">Summary Report</a></li>
                    </ul>
                   </li>
 

@@ -119,7 +119,15 @@ Route::group(['namespace'=>'Admin'],function(){
 
             Route::get('Generate/Fee', 'StudentController@GenerateMonthlyFee')->name('admin.student_generate_monthly_fee_form');
             Route::post('Generate/Monthly/Fee', 'StudentController@GenerateMonthlyFeeInsert')->name('admin.student_generate_monthly_fee_insert');
+
+            Route::get('Receive/Fee/Form', 'StudentController@feeReceiveStudentForm')->name('admin.student_fee_receive_form');
+            Route::get('/Fee/search/{std_id}', 'StudentController@studentFeeSearch')->name('admin.student_fee_search');
+            Route::post('Receive/Fee/', 'StudentController@feeReceiveStudent')->name('admin.student_fee_receive');
+
+            Route::get('fee/receive/receipt/{student_id}','StudentController@feeReceiveReceipt')->name('web.fee_receive_receipt');
         });
+
+
         
         Route::group(['prefix'=>'Report'],function(){
             Route::get('admission/fees', 'ReportController@admissionFee')->name('admin.admsn_fee_report');
@@ -132,6 +140,8 @@ Route::group(['namespace'=>'Admin'],function(){
 
             Route::get('monthly/fees', 'ReportController@monthlyFee')->name('admin.monthly_fee_report');
             Route::get('monthly/fees/ajax/', 'ReportController@monthlyFeeAjax')->name('admin.monthly_fee_report_ajax');
+            Route::post('monthly/fees/search', 'ReportController@monthlyFeeSearch')->name('admin.monthly_fee_search');
+            Route::get('month/fetch/ajax/{batch_id}', 'ReportController@MonthFetchAjax')->name('admin.month_fetch_ajax');
 
             Route::get('Student/thankyou/{student_id}/{batch_id}', 'ReportController@thankYou')->name('admin.student_thank_you');
             Route::get('Student/promotion/thankyou/{student_id}/{batch_id}', 'ReportController@promotionThankYou')->name('admin.student_promotion_thank_you');
