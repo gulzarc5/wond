@@ -146,5 +146,18 @@ Route::group(['namespace'=>'Admin'],function(){
             Route::get('Student/thankyou/{student_id}/{batch_id}', 'ReportController@thankYou')->name('admin.student_thank_you');
             Route::get('Student/promotion/thankyou/{student_id}/{batch_id}', 'ReportController@promotionThankYou')->name('admin.student_promotion_thank_you');
         });
+
+        Route::group(['prefix' => 'Expense'],function(){
+            Route::get('list','ExpenseController@expenseList')->name('admin.expense_list');
+            Route::post('item/add','ExpenseController@expenseItemAdd')->name('admin.expense_item_add');
+
+            Route::get('add/form','ExpenseController@expenseAddForm')->name('admin.expense_add_form');
+            Route::post('add','ExpenseController@expenseAdd')->name('admin.expense_add');
+
+            Route::get('detail/list','ExpenseController@expenseDetailList')->name('admin.expense_details_list');
+            Route::get('detail/list/ajax','ExpenseController@expenseDetailListAjax')->name('admin.expense_details_list_ajax');
+
+            Route::post('search','ExpenseController@expenseSearch')->name('admin.expense_search');
+        });
     });
 });

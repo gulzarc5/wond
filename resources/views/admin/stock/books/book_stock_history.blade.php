@@ -46,6 +46,7 @@
             var table = $('#size_list').DataTable({
                 processing: true,
                 serverSide: true,
+                iDisplayLength: 50,
                 ajax: "{{ route('admin.book_stock_history_ajax') }}",
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex'},

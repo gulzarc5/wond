@@ -76,8 +76,6 @@
                 <ul class="nav side-menu">
                   <li><a href="{{ route('admin.deshboard')}}"><i class="fa fa-home"></i> Home </span></a>
                   </li>
-                  <li><a href="{{ route('admin.student_fee_receive_form')}}"><i class="fa fa-home"></i> Receive Fees </span></a>
-                  </li>
                   <li><a><i class="fa fa-edit"></i> Student <span class="fa fa-chevron-down"></span></a>
                      <ul class="nav child_menu">
                       <li class="sub_menu"><a href="{{route('admin.add_student_form')}}">New Admission</a></li>
@@ -87,6 +85,14 @@
                       <li class="sub_menu"><a href="{{route('admin.student_generate_monthly_fee_form')}}">Generate Fees</a></li>
                     </ul>
                   </li>
+
+                  <li><a><i class="fa fa-edit"></i> Expense <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">                     
+                      <li><a href="{{route('admin.expense_add_form')}}"><i class="fa fa-edit"></i>Add Expense</a></li>
+                      <li><a href="{{route('admin.expense_details_list')}}"><i class="fa fa-edit"></i>Expense Report</a></li>
+                   </ul>
+                 </li>
+
 
                   <li><a><i class="fa fa-edit"></i> Fees Report<span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
@@ -170,6 +176,7 @@
                           <li><a href="{{route('admin.cloth_size_list')}}">Size List</a></li>
                         </ul>
                       </li>
+                      <li><a href="{{route('admin.expense_list')}}">Add New Expense Name</a></li>
 
                     </ul>
                   </li>
