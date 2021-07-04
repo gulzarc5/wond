@@ -187,6 +187,55 @@ class ReportController extends Controller
         ->make(true);
     }
 
+    public function MonthFetchAjax($batch_id)
+    {
+        $batch =  DB::table('fees_month')->where('batch_id',$batch_id)->get();
+        return $batch;
+    }
+
+    public function monthlyFeeSearch(Request $request)
+    {
+        $request->validate([
+            'batch' => 'required',
+            'month' => 'required',
+        ]);
+        $batch = $request->input('batch');
+        $month = $request->input('month');
+        $medium = $request->input('medium');
+        $class = $request->input('class');
+        
+        $med_view  = null;
+        $class_data = null;
+        if (isset($medium) && !empty($medium)) {
+            $med_view  = "Bengali";
+            if ($medium == '2') {
+                $med_view  = "English";
+            }
+        }
+        if (isset($class) && !empty($class)) {
+            $class_data = DB::table('class')->where('id',$class)->first();
+            $class_name = $class_data->name;
+        }       
+        
+        $month_data = DB::table('fees_month')->where('id',$month)->first();
+        $month_name = $month_data->month;
+
+
+        $query = DB::table('student_monthly_fees')
+            ->select('student_monthly_fees.*','students.student_id as std_id','student_details.name as std_name')
+            ->leftjoin('students','students.id','=','student_monthly_fees.student_id')
+            ->leftjoin('student_details','student_details.student_id','=','students.id')
+            ->where('student_monthly_fees.month_id',$month);
+            if (!empty($class)) {
+                $query = $query->where('student_monthly_fees.class_id',$class);
+            }
+        $monthly_fees = $query->orderby('student_monthly_fees.id','desc')->get();
+        $batch = DB::table('student_batch')->get();
+        return view('admin.fees_report.monthly_fee',compact('batch','monthly_fees','med_view','class_name','month_name'));
+
+
+    }
+
     public function thankYou($student_id,$batch_id)
     {
         try {

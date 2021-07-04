@@ -76,6 +76,7 @@
         </div>
       </div>
     </div>
+
     <div class="row tile_count">
       <div class="col-md-12 col-sm-12 col-xs-12 tile_stats_count">
         <b style="font-size: 26px;display: flex;justify-content: center;">Promotion</b>
@@ -109,6 +110,44 @@
         <div class="count green">
           @if (isset($total_prmsn_fees_scholarship))
               {{$total_prmsn_fees_scholarship}}
+          @endif
+        </div>
+      </div>
+    </div>
+
+    <div class="row tile_count" style="padding-bottom:20px;">
+      <div class="col-md-12 col-sm-12 col-xs-12 tile_stats_count">
+        <b style="font-size: 26px;display: flex;justify-content: center;">Monthly Fees</b>
+      </div>
+      <div class="col-md-3 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-user"></i> Total Monthly Fees</span>
+        <div class="count green">
+          @if (isset($total_fees))
+              {{$total_fees}}
+          @endif
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-user"></i> Total Fees Received</span>
+        <div class="count green">
+          @if (isset($total_fees_received))
+              {{$total_fees_received}}
+          @endif
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-user"></i> Total Fees Pending</span>
+        <div class="count green">
+          @if (isset($total_fees_pending))
+              {{$total_fees_pending}}
+          @endif
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-user"></i> Total Fees Scholarship</span>
+        <div class="count green">
+          @if (isset($total_fees_scholarship))
+              {{$total_fees_scholarship}}
           @endif
         </div>
       </div>

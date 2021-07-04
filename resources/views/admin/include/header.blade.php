@@ -41,6 +41,7 @@
     <link href="{{asset('admin/src_files/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css')}}" rel="stylesheet">
 
     <link href="{{asset('admin/src_files/build/css/custom.min.css')}}" rel="stylesheet">
+    <link href="{{asset('admin/css/custom.css')}}" rel="stylesheet">
   </head>
 
   <body class="nav-md">
@@ -85,12 +86,20 @@
                     </ul>
                   </li>
 
+                  <li><a><i class="fa fa-edit"></i> Expense <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">                     
+                      <li><a href="{{route('admin.expense_add_form')}}"><i class="fa fa-edit"></i>Add Expense</a></li>
+                      <li><a href="{{route('admin.expense_details_list')}}"><i class="fa fa-edit"></i>Expense Report</a></li>
+                   </ul>
+                 </li>
+
+
                   <li><a><i class="fa fa-edit"></i> Fees Report<span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                      <li class="sub_menu"><a href="{{route('admin.admsn_fee_report')}}">Admission Fees</a></li>
                      <li class="sub_menu"><a href="{{route('admin.promotion_fee_report')}}">Promotion Fees</a></li>
                      <li class="sub_menu"><a href="{{route('admin.monthly_fee_report')}}">Monthly Fees</a></li>
-                     <li class="sub_menu"><a href="{{route('admin.student_promote')}}">Summary Report</a></li>
+                     <li class="sub_menu"><a href="#">Summary Report</a></li>
                    </ul>
                   </li>
 
@@ -132,14 +141,6 @@
 
                   <li><a><i class="fa fa-bar-chart-o"></i> Configuration <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                        <li><a>Users<span class="fa fa-chevron-down"></span></a>
-                          <ul class="nav child_menu">
-                            <li class="sub_menu"><a href="#">New Registration</a>
-                            </li>
-                            <li><a href="#">Member List</a>
-                            </li>
-                          </ul>
-                        </li>
 
                       <li><a></i>Class <span class="fa fa-chevron-down"></span></a>
                         <ul class="nav child_menu">
@@ -175,6 +176,7 @@
                           <li><a href="{{route('admin.cloth_size_list')}}">Size List</a></li>
                         </ul>
                       </li>
+                      <li><a href="{{route('admin.expense_list')}}">Add New Expense Name</a></li>
 
                     </ul>
                   </li>

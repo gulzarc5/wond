@@ -20,6 +20,16 @@ class DeshboardController extends Controller
         $total_admsn_fees_pending = 0;
         $total_admsn_fees_scholarship = 0;
 
+        $total_prmsn_fees = 0;
+        $total_prmsn_fees_received = 0;
+        $total_prmsn_fees_pending = 0;
+        $total_prmsn_fees_scholarship = 0;
+
+        $total_fees = 0;
+        $total_fees_received = 0;
+        $total_fees_pending = 0;
+        $total_fees_scholarship = 0;
+
         $batch = DB::table('student_batch')->orderBy('id','desc')->limit(1)->first();
         if ($batch) {
             $student = DB::table('students')->where('batch_id',$batch->id)->count();
@@ -42,7 +52,15 @@ class DeshboardController extends Controller
             $total_prmsn_fees_received = $total_prmsn_student->sum('receive_amount');
             $total_prmsn_fees_pending = $total_prmsn_student->sum('pending_amount');
             $total_prmsn_fees_scholarship = $total_prmsn_student->sum('discount');
+
+            $total_fees_data = DB::table('student_monthly_fees')
+                ->join('fees_month','fees_month.id','=','student_monthly_fees.month_id')
+                ->where('fees_month.batch_id',$batch->id);
+            $total_fees = $total_fees_data->sum('student_monthly_fees.amount');
+            $total_fees_received = $total_fees_data->sum('student_monthly_fees.receive_amount');
+            $total_fees_pending = $total_fees_data->sum('student_monthly_fees.pending_amount');
+            $total_fees_scholarship = $total_fees_data->sum('student_monthly_fees.discount');
         }
-        return view('admin.admindeshboard',compact('student','class_b','class_e','employee','total_admsn_fees','total_admsn_fees_received','total_admsn_fees_pending','total_admsn_fees_scholarship','total_prmsn_fees','total_prmsn_fees_received','total_prmsn_fees_pending','total_prmsn_fees_scholarship'));
+        return view('admin.admindeshboard',compact('student','class_b','class_e','employee','total_admsn_fees','total_admsn_fees_received','total_admsn_fees_pending','total_admsn_fees_scholarship','total_prmsn_fees','total_prmsn_fees_received','total_prmsn_fees_pending','total_prmsn_fees_scholarship','total_fees','total_fees_received','total_fees_pending','total_fees_scholarship'));
     }
 }

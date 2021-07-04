@@ -8,6 +8,7 @@ use DB;
 use Carbon\Carbon;
 use Illuminate\Contracts\Encryption\DecryptException;
 use DataTables;
+use SmsHelpers;
 
 class StudentController extends Controller
 {
@@ -38,7 +39,7 @@ class StudentController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use($request,$fee_total_amount,$discount,$admission_type,$receive_amount,&$student) {
+            DB::transaction(function () use($request) {
               $student = DB::table('students')
                 ->insertGetId([
                     'class_id' => $request->input('class'),
@@ -51,8 +52,7 @@ class StudentController extends Controller
                 ]);
 
                 if ($student) {
-                    $batch = DB::table('student_batch')->where('id',$request->input('batch'))->first();
-                    $student_id = "WNS".$batch->name;
+                    $student_id = "WNS".$request->input('batch');
                     $length = 5 - intval(strlen((string) $student));
                     for ($i=0; $i < $length; $i++) { 
                         $student_id.='0';
@@ -97,14 +97,20 @@ class StudentController extends Controller
                             'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                             'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                         ]);
-                    
+                    $arr1 = explode(' ',trim($request->input('name')));
+                    $name =  $arr1[0];
+                    $sym = "Mr.";
+                    if ($request->input('gender') == 'F') {
+                         $sym = "Miss.";
+                    }
+                    $request_info = urldecode("Dear Parent, updates related to your ward and school will be sent to you via SMS.Wonderland National School,Latakandi.");
+                    SmsHelpers::smsSend($request->input('mobile'),$request_info);
                 }else {
                     return redirect()->back()->with('error','Something Went Wrong Please Try Again');
                 }
      
             });
-            $batch = $request->input('batch');
-            return redirect()->route('admin.student_thank_you',['student_id'=>encrypt($student),'batch_id'=>encrypt($batch)]);      
+            return redirect()->back()->with('message','Student Added Successfully'); 
         }catch (\Exception $e) {
             dd($e);
             return redirect()->back()->with('error','Something Went Wrong Please Try Again');
@@ -284,6 +290,11 @@ class StudentController extends Controller
                             'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                             'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                         ]);
+                    $arr1 = explode(' ',trim($request->input('name')));
+                    $name =  $arr1[0];
+                    $class_name = DB::table('class')->where('id',$request->input('class'))->first();
+                    $request_info = urldecode("Dear Parent, updates related to your ward and school will be sent to you via SMS.Wonderland National School,Latakandi.");
+                    SmsHelpers::smsSend($request->input('mobile'),$request_info);
                     
                 }else {
                     return redirect()->back()->with('error','Something Went Wrong Please Try Again');
@@ -532,7 +543,7 @@ class StudentController extends Controller
                             'fees_amount' => $promotion_fees,
                             'receive_amount' => $receive_amount,
                             'discount' => $discount,
-                            'pending_amount' => ($promotion_fees - $receive_amount),
+                            'pending_amount' => ($promotion_fees - $receive_amount - $discount),
                             'is_paid' => 2,
                             'received_by'=>'A',
                             'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
@@ -569,6 +580,16 @@ class StudentController extends Controller
                         'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
                     ]);
             });
+            $student_name = DB::table('students')
+                ->select('student_details.name as s_name','student_details.mobile as mobile')
+                ->leftjoin('student_details','student_details.student_id','=','students.id')
+                ->where('students.id',$student_id)
+                ->first();
+            $arr1 = explode(' ',trim($student_name->s_name));
+            $name =  $arr1[0];
+            $class_name = DB::table('class')->where('id',$class)->first();
+            $request_info = urldecode("Dear Parent, updates related to your ward and school will be sent to you via SMS.Wonderland National School,Latakandi.");
+            SmsHelpers::smsSend($student_name->mobile,$request_info);
             return redirect()->route('admin.student_promotion_thank_you',['student_id'=>encrypt($student_id),'batch_id'=>encrypt($batch)]); 
             
         }catch (\Exception $e) {
@@ -621,7 +642,7 @@ class StudentController extends Controller
                                         'month_id' => $month_id,
                                         'receive_amount' => 0,
                                         'pending_amount' => 0,
-                                        'amount' => 0,
+                                        'amount' => $value->monthly_fees,
                                         'is_paid' => 1,
                                         'discount' => $value->monthly_fees,
                                         'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
@@ -665,6 +686,334 @@ class StudentController extends Controller
             }
         }else{
             return redirect()->back()->with('error','Something Went Wrong Please Try Again');
+        }
+    }
+
+    public function feeReceiveStudentForm()
+    {
+        return view('admin.student.receive_student_fee');
+    }
+
+    public function studentFeeSearch($student_id)
+    {
+        $student = DB::table('students')
+            ->select('students.*','student_details.name as s_name','student_details.f_name as f_name','class.name as c_name')
+            ->leftjoin('student_details','student_details.student_id','=','students.id')
+            ->leftjoin('class','class.id','=','students.class_id')
+            ->where('students.student_id',$student_id)
+            ->first();
+        if ($student) {
+            $admsnFees = DB::table('student_admsn_fees')
+                ->where('student_id',$student->id)
+                ->sum('pending_amount');        
+            $promotion_fees = DB::table('student_promotion_fees')
+                ->where('student_id',$student->id)
+                ->sum('pending_amount');
+            $monthly_fees = DB::table('student_monthly_fees')
+                ->where('student_id',$student->id)
+                ->sum('pending_amount');
+            $html = '<div class="row invoice-info" style="padding: 20px;font-size: 16px;">
+                    <div class="col-sm-12 invoice-col">
+                        <address class="font-15"><strong>Student Name : </strong>'.$student->s_name.'</address>
+                    </div>
+                    <div class="col-sm-12 invoice-col">
+                        <address class="font-15"><strong>Father Name : </strong>'.$student->f_name.'</address>
+                    </div>
+                    <div class="col-sm-12 invoice-col">
+                        <address class="font-15"><strong>Class Name : </strong>'.$student->c_name.'</address>
+                    </div>';
+            if ($admsnFees > 0) {
+                $html .='<div class="col-sm-12 invoice-col">
+                <address class="font-15"><strong>Admission Fees : </strong>'.number_format($admsnFees,2,".",'').'</address>
+                </div>';
+            }  
+            if ($promotion_fees > 0) {
+                $html .='<div class="col-sm-12 invoice-col">
+                <address class="font-15"><strong>Promotion Fees : </strong>'.number_format($promotion_fees,2,".",'').'</address>
+                </div>';
+            }  
+            if ($monthly_fees > 0) {
+                $html .='<div class="col-sm-12 invoice-col">
+                <address class="font-15"><strong>Monthly Fees : </strong>'.number_format($monthly_fees,2,".",'').'</address>
+                </div>';
+            } 
+            if (($admsnFees < 1) && ($promotion_fees < 1 )  && ($monthly_fees < 1) ) {
+                $html.= '<div class="col-sm-12 invoice-col" style="color: #00b8ff;font-size: 21px;">
+                    <address class="font-15"><strong> The Student Have No Pending Fees </strong></address>
+                </div>';
+            }else{
+                $html .='<div class="col-sm-12 invoice-col">
+                <address class="font-15"><strong>Total Pending Fees : </strong><b style="color:red">'.number_format(($admsnFees+$promotion_fees+$monthly_fees),2,".",'').'</b></address>
+                </div>
+                <div class="col-md-4 col-sm-12 col-xs-12 mb-3" style="color:#ff00a5;font-size: 15px;"><label for="name">Enter Receive Amount :</label></div>
+                <div class="col-md-8 col-sm-12 col-xs-12 mb-3"><input type="number" class="form-control"  placeholder="Enter Receive Amount" min="1" max="'.intval($admsnFees+$promotion_fees+$monthly_fees).'" id="std_id" required name="receive_amt"></div>
+                
+                <div class="col-sm-12 invoice-col" style="padding-top: 26px;text-align: center;">
+                    <button type="submit" class="btn btn-primary">Receive Fees</button>
+                </div>';
+            }            
+            $html .='</div>';
+            return $html;
+        } else {
+            return 1;
+        } 
+    }
+
+    public function feeReceiveStudent(Request $request)
+    {
+        $request->validate([
+            'student_id' => 'required',
+            'receive_amt' => 'required',
+        ]);
+
+        $admsn_fee_status = null;
+        $prmsn_fee_status = null;
+        $monthly_fee_status = null;
+
+        $student_id = $request->input('student_id');
+        $receive_amount = $request->input('receive_amt');
+
+        if ($receive_amount < 1) {
+            return redirect()->back()->with('error','Receive Amount Should Be Greater Then Zero');
+        }
+
+        $student = DB::table('students')->where('student_id',$student_id)->first();
+        if (!$student) {
+            return redirect()->back()->with('error','Student Not Found');
+        }
+        // Admission Fees
+        $admsnFees = DB::table('student_admsn_fees')->where('student_id',$student->id)->sum('pending_amount'); 
+        if ($admsnFees > 0) {
+            $admsnRcvAmt = 0;
+            if ($admsnFees < $receive_amount) {
+                $receive_amount = $receive_amount - $admsnFees;
+                $admsnRcvAmt = $admsnFees;
+            }else{
+                $admsnRcvAmt = $receive_amount;
+                $receive_amount = 0;
+            }
+            if ($admsnRcvAmt > 0) {
+                $adms_fee_student= DB::table('student_admsn_fees')
+                    ->where('student_id',$student->id)
+                    ->where('pending_amount','>',0)
+                    ->get();
+                $admsn_rcv_amt = 0;
+                foreach ($adms_fee_student as $key => $value) {
+                    if ($admsnRcvAmt  > 0) {
+                        if ($value->pending_amount < $admsnRcvAmt){
+                            $admsnRcvAmt = $admsnRcvAmt - $value->pending_amount;
+                            DB::table('student_admsn_fees')
+                                ->where('id',$value->id)
+                                ->update([
+                                    'receive_amount' => DB::raw("`receive_amount`+".($value->pending_amount)),
+                                    'pending_amount' => 0,
+                                    'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                                ]);
+                            $admsn_rcv_amt = $admsn_rcv_amt + $value->pending_amount;
+                        }else{
+                            DB::table('student_admsn_fees')
+                                ->where('id',$value->id)
+                                ->update([
+                                    'receive_amount' => DB::raw("`receive_amount`+".($admsnRcvAmt)),
+                                    'pending_amount' => DB::raw("`pending_amount`-".($admsnRcvAmt)),
+                                    'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                                ]);
+                            $admsn_rcv_amt = $admsn_rcv_amt +  $admsnRcvAmt;
+                            $admsnRcvAmt = 0;
+                        }
+                    }
+                }
+                DB::table('student_admsn_fees_details')
+                    ->insert([
+                        'student_id' => $student->id,
+                        'fee_type' => 2,
+                        'amount' => $admsn_rcv_amt,
+                        'comments' => 'Pending Amount Received By Admin',
+                        'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                        'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                    ]);
+                $admsn_fee_status = 1;
+            }
+        }
+        // Promotion Fees
+        if ($receive_amount > 0) {
+            $promotion_fees = DB::table('student_promotion_fees')->where('student_id',$student->id)->sum('pending_amount');
+            $prmsnRcvAmt = 0;
+            if ($promotion_fees > 0) {
+                if ($promotion_fees < $receive_amount) {
+                    $receive_amount = $receive_amount - $promotion_fees;
+                    $prmsnRcvAmt = $promotion_fees;
+                }else{
+                    $prmsnRcvAmt = $receive_amount;
+                    $receive_amount = 0;
+                }
+            }
+
+            if ($prmsnRcvAmt > 0) {
+                $prmsn_fee_student= DB::table('student_promotion_fees')
+                    ->where('student_id',$student->id)
+                    ->where('pending_amount','>',0)
+                    ->get();
+                $prmsn_rcv_amt = 0;
+
+                foreach ($prmsn_fee_student as $key => $value) {
+                    if ($prmsnRcvAmt  > 0) {
+                        if ($value->pending_amount < $prmsnRcvAmt){
+                            $prmsnRcvAmt = $prmsnRcvAmt - $value->pending_amount;
+                            DB::table('student_promotion_fees')
+                                ->where('id',$value->id)
+                                ->update([
+                                    'receive_amount' => DB::raw("`receive_amount`+".($value->pending_amount)),
+                                    'pending_amount' => 0,
+                                    'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                                ]);
+                            $prmsn_rcv_amt = $prmsn_rcv_amt + $value->pending_amount;
+                        }else{
+                            DB::table('student_promotion_fees')
+                                ->where('id',$value->id)
+                                ->update([
+                                    'receive_amount' => DB::raw("`receive_amount`+".($prmsnRcvAmt)),
+                                    'pending_amount' => DB::raw("`pending_amount`-".($prmsnRcvAmt)),
+                                    'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                                ]);
+                            $prmsn_rcv_amt = $prmsn_rcv_amt +  $prmsnRcvAmt;
+                            $prmsnRcvAmt = 0;
+                        }
+                    }
+                }
+                DB::table('student_promotion_fees_details')
+                    ->insert([
+                        'student_id' => $student->id,
+                        'fee_type' => 2,
+                        'amount' => $prmsn_rcv_amt,
+                        'comments' => 'Pending Amount Received By Admin',
+                        'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                        'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                    ]);
+                $prmsn_fee_status = 1;
+            }
+        }
+
+        //Monthly Fees
+        if ($receive_amount > 0) {
+            $monthly_fees = DB::table('student_monthly_fees')->where('student_id',$student->id)->sum('pending_amount');
+            $monthlyRcvAmt = 0 ;
+            if ($monthly_fees > 0) {
+                if ($monthly_fees < $receive_amount) {
+                    $receive_amount = $receive_amount - $monthly_fees;
+                    $monthlyRcvAmt = $monthly_fees;
+                }else{
+                    $monthlyRcvAmt = $receive_amount;
+                    $receive_amount = 0;
+                }
+            }
+
+            if ($monthlyRcvAmt > 0) {
+                $monthly_fee_student= DB::table('student_monthly_fees')
+                    ->where('student_id',$student->id)
+                    ->where('pending_amount','>',0)
+                    ->get();
+                $monthly_rcv_amt = 0;
+
+                foreach ($monthly_fee_student as $key => $value) {
+                    if ($monthlyRcvAmt  > 0) {
+                        if ($value->pending_amount < $monthlyRcvAmt){
+                            $monthlyRcvAmt = $monthlyRcvAmt - $value->pending_amount;
+                            DB::table('student_monthly_fees')
+                                ->where('id',$value->id)
+                                ->update([
+                                    'receive_amount' => DB::raw("`receive_amount`+".($value->pending_amount)),
+                                    'pending_amount' => 0,
+                                    'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                                ]);
+                            $monthly_rcv_amt = $monthly_rcv_amt + $value->pending_amount;
+                        }else{
+                            DB::table('student_monthly_fees')
+                                ->where('id',$value->id)
+                                ->update([
+                                    'receive_amount' => DB::raw("`receive_amount`+".($monthlyRcvAmt)),
+                                    'pending_amount' => DB::raw("`pending_amount`-".($monthlyRcvAmt)),
+                                    'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                                ]);
+                            $monthly_rcv_amt = $monthly_rcv_amt +  $monthlyRcvAmt;
+                            $monthlyRcvAmt = 0;
+                        }
+                    }
+                }
+                DB::table('student_monthly_fee_details')
+                    ->insert([
+                        'student_id' => $student->id,
+                        'fee_type' => 2,
+                        'amount' => $monthly_rcv_amt,
+                        'comments' => 'Pending Amount Received By Admin',
+                        'created_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                        'updated_at' => Carbon::now()->setTimezone('Asia/Kolkata')->toDateTimeString(),
+                    ]);
+                $monthly_fee_status = 1;
+            }
+        }
+
+        return redirect()->route('web.fee_receive_receipt',['student_id'=>$student_id]);
+        
+    }
+
+    public function feeReceiveReceipt($student_id)
+    {
+        $student = DB::table('students')->where('student_id',$student_id)->first();
+        $admsn_fees_pending = 0 ;
+        $promsn_fees_pending = 0 ;
+        $month_fees_pending = 0 ;
+        $receive_fees = 0;
+        $balance = 0;
+        if ($student) {
+            $student = DB::table('students')
+                ->select('students.*','class.name as c_name','student_batch.name as b_name','student_details.name as s_name')
+                ->leftjoin('class','class.id','=','students.class_id')
+                ->leftjoin('student_details','student_details.student_id','=','students.id')
+                ->leftjoin('student_batch','student_batch.id','=','students.batch_id')
+                ->where('students.id',$student->id)
+                ->first();
+            $date = Carbon::now()->setTimezone('Asia/Kolkata')->startOfDay();
+            // dd($date);
+            $admsn_fee = DB::table('student_admsn_fees_details')->where('student_id',$student->id)->whereDate('created_at',$date)->where('fee_type',2)->get();
+            if ($admsn_fee) {
+                $admsn_fees_pending = DB::table('student_admsn_fees')->where('student_id',$student->id)->sum('pending_amount');
+               
+                $balance += $admsn_fees_pending;
+                foreach ($admsn_fee as $key => $value) {
+                    if ($value->fee_type == '2') {
+                        $admsn_fees_pending = $admsn_fees_pending+$value->amount;
+                        $receive_fees = $receive_fees + $value->amount;
+                    }                    
+                }
+            }
+
+            $promsn_fee = DB::table('student_promotion_fees_details')->where('student_id',$student->id)->whereDate('created_at',$date)->where('fee_type',2)->get();
+            if ($promsn_fee) {
+                $promsn_fees_pending = DB::table('student_promotion_fees')->where('student_id',$student->id)->sum('pending_amount');
+                $balance += $promsn_fees_pending;
+                foreach ($promsn_fee as $key => $value) {
+                    if ($value->fee_type == '2') {
+                        $promsn_fees_pending = $promsn_fees_pending+$value->amount;
+                        $receive_fees = $receive_fees + $value->amount;
+                    }                    
+                }
+            }
+
+            $month_fee = DB::table('student_monthly_fee_details')->where('student_id',$student->id)->whereDate('created_at',$date)->where('fee_type',2)->get();
+            if ($month_fee) {
+                $month_fees_pending = DB::table('student_monthly_fees')->where('student_id',$student->id)->sum('pending_amount');
+                $balance += $month_fees_pending;
+                foreach ($month_fee as $key => $value) {
+                    if ($value->fee_type == '2') {
+                        $month_fees_pending = $month_fees_pending+$value->amount;
+                        $receive_fees = $receive_fees + $value->amount;
+                    }                    
+                }
+            }
+
+        $total_pending_fees = $admsn_fees_pending+$promsn_fees_pending+$month_fees_pending;
+        return view('admin.student.fee_receive_receipt',compact('student','admsn_fees_pending','promsn_fees_pending','month_fees_pending','total_pending_fees','receive_fees','balance'));
         }
     }
 }

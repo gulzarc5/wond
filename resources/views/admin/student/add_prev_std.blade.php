@@ -28,7 +28,7 @@
 
                 <div>
                     <div class="x_content">
-                        {{ Form::open(['method' => 'post','route'=>'admin.add_new_student']) }}
+                        {{ Form::open(['method' => 'post','route'=>'admin.add_prev_student']) }}
 
                         <div class="well" style="overflow: auto">
                             <div class="form-row mb-10">
